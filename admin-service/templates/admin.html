@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quote Administration</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Quote Administration Panel</h1>
+        
+        <h2>Add New Quote</h2>
+        <form id="add-quote-form">
+            <input type="text" id="new-quote-text" placeholder="Enter new quote" required>
+            <button type="submit" class="btn btn-success">Add Quote</button>
+        </form>
+
+        <h2 class="mt-4">Existing Quotes</h2>
+        <div id="quotes-list">
+            <!-- Quotes will be listed here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        function fetchQuotes() {
+            $.get('/admin/quotes', function(quotes) {
+                var quotesHtml = quotes.map(function(quote) {
+                    return `<div class="quote-item" data-id="${quote.id}">
+                                <span>${quote.text}</span>
+                                <button onclick="deleteQuote(${quote.id})" class="btn btn-danger">Delete</button>
+                                <button onclick="updateQuotePrompt(${quote.id})" class="btn btn-primary">Update</button>
+                            </div>`;
+                }).join("");
+                $('#quotes-list').html(quotesHtml);
+            });
+        }
+
+        function deleteQuote(id) {
+            $.ajax({
+                url: '/admin/quotes/' + id,
+                method: 'DELETE',
+                success: function() {
+                    fetchQuotes();
+                },
+                error: function() {
+                    alert("Error in deleting quote.");
+                }
+            });
+        }
+
+        function updateQuotePrompt(id) {
+            var newText = prompt("Enter new text for the quote:");
+            if (newText) {
+                updateQuote(id, newText);
+            }
+        }
+
+        function updateQuote(id, text) {
+            $.ajax({
+                url: '/admin/quotes/' + id,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ text: text }),
+                success: function() {
+                    fetchQuotes();
+                },
+                error: function() {
+                    alert("Error in updating quote.");
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            fetchQuotes();
+
+            $('#add-quote-form').submit(function(event) {
+                event.preventDefault();
+                var newText = $('#new-quote-text').val().trim();
+                if (newText) {
+                    $.ajax({
+                        url: '/admin/quotes',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ text: newText }),
+                        success: function() {
+                            $('#new-quote-text').val('');
+                            fetchQuotes();
+                        },
+                        error: function(xhr) {
+                            alert('Error adding quote: ' + xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

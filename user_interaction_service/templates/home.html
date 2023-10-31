@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Quote Generator</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #quote-history {
+            max-height: 400px; /* Adjust height as needed */
+            overflow-y: auto; /* Makes the div scrollable */
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+        }
+        .quote-history-item {
+            border-bottom: 1px dashed #ccc;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Inspiring Quotes</h1>
+        <div id="quote-box" class="text-center mt-4">
+            <!-- Current quote will be displayed here -->
+        </div>
+        <div class="text-center mt-3">
+            <button id="new-quote" class="btn btn-primary">Show me another quote!</button>
+        </div>
+        <h2 class="text-center mt-4">Quote History</h2>
+        <div id="quote-history" class="mt-3">
+            <!-- History of quotes will be displayed here -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        function fetchQuote() {
+            $.get('/quote', function(data) {
+                var quoteHtml = `<blockquote class="blockquote"><p class="mb-0">${data.text}</p>`;
+                if (data.current_count !== undefined) {
+                    quoteHtml += `<footer>This quote has been shown ${data.current_count} times.</footer>`;
+                } else {
+                    quoteHtml += `<footer>This quote count is currently unavailable.</footer>`;
+                }
+                quoteHtml += `</blockquote>`;
+
+                // Update the current quote
+                $('#quote-box').html(quoteHtml);
+
+                // Append to history and limit number of history items
+                $('#quote-history').prepend('<div class="quote-history-item">' + quoteHtml + '</div>');
+                if ($('#quote-history .quote-history-item').length > 5) {
+                    $('#quote-history .quote-history-item').last().remove();
+                }
+            }).fail(function() {
+                $('#quote-box').text('Failed to load quote. Try again?');
+            });
+        }
+
+        $(document).ready(function() {
+            fetchQuote();
+            $('#new-quote').click(function() {
+                fetchQuote();
+                $(this).prop('disabled', true); // Disable the button
+
+                // Enable the button after 5 seconds
+                setTimeout(function() {
+                    $('#new-quote').prop('disabled', false);
+                }, 5000); // 5000 milliseconds = 5 seconds
+            });
+        });
+    </script>
+</body>
+</html>
