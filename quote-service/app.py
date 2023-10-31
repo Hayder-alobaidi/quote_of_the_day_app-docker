@@ -1,10 +1,13 @@
+import os
+import random
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-import random
 from rabbitmq_publisher import RabbitMQPublisher
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///quotes.db'
+
+# Configure database URI
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -12,8 +15,8 @@ class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(500), nullable=False)
 
-# Update this URL with your RabbitMQ server URL
-rabbitmq_url = "amqp://admin:admin@localhost:5672/"
+# Configure RabbitMQ URL
+rabbitmq_url = os.environ['RABBITMQ_URL']
 rabbitmq_publisher = RabbitMQPublisher(rabbitmq_url)
 
 # Endpoint to get all quotes
@@ -29,7 +32,6 @@ def get_random_quote():
     quotes = Quote.query.all()
     random_quote = random.choice(quotes) if quotes else None
     if random_quote:
-        # Notify the analytics service via RabbitMQ
         rabbitmq_publisher.notify_analytics_service(random_quote.id)
         return jsonify({'id': random_quote.id, 'text': random_quote.text})
     return jsonify({'message': 'No quotes available'})
@@ -64,15 +66,13 @@ def delete_quote(id):
     quote = Quote.query.get_or_404(id)
     db.session.delete(quote)
     db.session.commit()
-    
-    # Notify the analytics service that a quote was deleted
+
     rabbitmq_publisher.notify_quote_deletion(id)
 
     return jsonify({'message': 'Quote deleted'})
 
 if __name__ == '__main__':
     try:
-        app.run(debug=True, port=5000)
+        app.run(debug=False, host='0.0.0.0', port=5000)
     finally:
-        # Ensure the RabbitMQ connection is closed on app shutdown
         rabbitmq_publisher.close_connection()
