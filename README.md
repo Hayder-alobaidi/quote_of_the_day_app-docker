@@ -1,1 +1,1 @@
-# quote_of_the_day_app-k8s
+# quote_of_the_day_app
