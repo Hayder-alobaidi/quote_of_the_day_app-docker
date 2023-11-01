@@ -15,6 +15,10 @@ class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(500), nullable=False)
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 # Configure RabbitMQ URL
 rabbitmq_url = os.environ['RABBITMQ_URL']
 rabbitmq_publisher = RabbitMQPublisher(rabbitmq_url)
