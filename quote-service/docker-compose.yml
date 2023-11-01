@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7  # You can choose the version of MySQL that you prefer
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: quotesdb
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  quote_app:
+    image: hayder89/quote-service:latest  # Use your built image
+    environment:
+      DATABASE_URI: mysql://admin:password@db:3306/quotesdb
+      RABBITMQ_URL: amqp://admin:admin@localhost:5672/  # Adjust this if needed
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+
+volumes:
+  mysql_data:
