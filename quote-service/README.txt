@@ -12,3 +12,8 @@ docker build -t quote-service:latest .
 docker tag quote-service:latest hayder89/quote-service:latest
 
 docker push hayder89/quote-service:latest
+
+
+
+docker-compose up -d
+
