@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  analytics-db:
+    image: mysql:5.7
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: analyticsdb
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"  # Using a different port if running alongside the quotes db
+    volumes:
+      - analytics_mysql_data:/var/lib/mysql
+      - ./analytics_init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  analytics_app:
+    image: hayder89/analytics-service:latest  # Using Docker Hub image
+    environment:
+      DATABASE_URI: mysql://admin:password@analytics-db:3306/analyticsdb
+    depends_on:
+      - analytics-db
+    ports:
+      - "5001:5001"
+
+volumes:
+  analytics_mysql_data:

@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS quote_count (
+    id INTEGER PRIMARY KEY,
+    quote_id INTEGER UNIQUE,
+    count INTEGER DEFAULT 0
+);
