@@ -1,11 +1,14 @@
+import os
+import json
+import threading
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from rabbitmq_consumer import RabbitMQConsumer
-import json
-import threading
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///analytics.db'
+
+# Configure database URI
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URI']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -14,7 +17,6 @@ class QuoteCount(db.Model):
     quote_id = db.Column(db.Integer, unique=True)
     count = db.Column(db.Integer, default=0)
 
-# Endpoint to get the count of a specific quote
 @app.route('/count/<int:quote_id>', methods=['GET'])
 def get_quote_count(quote_id):
     record = QuoteCount.query.filter_by(quote_id=quote_id).first()
@@ -23,7 +25,6 @@ def get_quote_count(quote_id):
     else:
         return jsonify({"message": "No record found for quote {}".format(quote_id)}), 404
 
-# Endpoint to get counts of all quotes
 @app.route('/counts', methods=['GET'])
 def get_all_counts():
     records = QuoteCount.query.all()
@@ -51,11 +52,12 @@ def start_rabbitmq_listener():
     def callback(ch, method, properties, body):
         data = json.loads(body)
         quote_id = data.get('quote_id')
-        action = data.get('action', 'increment')  # default to 'increment' if action is not specified
+        action = data.get('action')
         if quote_id is not None:
             process_message(quote_id, action)
 
-    rabbitmq_url = "amqp://admin:admin@localhost:5672/"
+    # Configure RabbitMQ URL
+    rabbitmq_url = os.environ['RABBITMQ_URL']
     rabbitmq_consumer = RabbitMQConsumer(rabbitmq_url, 'quote_notifications', callback=callback)
     rabbitmq_consumer.start_listening()
 
