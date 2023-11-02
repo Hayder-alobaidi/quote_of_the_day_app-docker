@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, render_template
 import requests
+import os
+
 
 app = Flask(__name__)
 
-quote_service_url = 'http://localhost:5000'  # URL of the Quote Service
-analytics_service_url = 'http://localhost:5001'  # URL of the Analytics Service
+quote_service_url = os.environ['QUOTE_SERVICE_URL']
+analytics_service_url = os.environ['ANALYTICS_SERVICE_URL']
 
 @app.route('/')
 def home():
