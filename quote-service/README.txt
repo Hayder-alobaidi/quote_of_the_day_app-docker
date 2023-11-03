@@ -9,9 +9,9 @@ docker login
 
 docker build -t analytics-service:1 .
 
-docker tag analytics-service:1 hayder89/analytics-service:1
+docker tag admin-service:1 hayder89/admin-service:1
 
-docker push hayder89/analytics-service:1
+docker push hayder89/admin-service:1
 
 
 

@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import requests
+import os
 
 app = Flask(__name__)
 CORS(app)
 
 # URL of the Quote Service
-quote_service_url = 'http://localhost:5000'
+quote_service_url = os.environ['QUOTE_SERVICE_URL']
 
 @app.route('/')
 def admin():
